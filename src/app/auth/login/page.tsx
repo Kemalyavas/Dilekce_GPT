@@ -27,7 +27,8 @@ export default function LoginPage() {
       toast.success('Giriş başarılı! Yönlendiriliyorsunuz...');
 
       setTimeout(() => {
-        router.push('/dashboard');
+        // YÖNLENDİRME DEĞİŞİKLİĞİ: '/dashboard' yerine '/' adresine yönlendir.
+        router.push('/');
       }, 1000);
     } catch (error: any) {
       toast.error(error.message || 'Giriş yapılırken hata oluştu');
