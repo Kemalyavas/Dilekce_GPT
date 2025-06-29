@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
+import { createClient } from '@/lib/supabase/server';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 const formatDilekce = (content: string) => {
@@ -11,10 +11,7 @@ const formatDilekce = (content: string) => {
 // Mevcut POST fonksiyonunu silip bunu yapıştırın.
 
 export async function POST(request: NextRequest) {
-  // Debug kodunu artık silebiliriz.
-  // console.log("--- SUNUCU TARAFI KONTROLÜ ---");
-  // console.log("Okunan API Anahtarı:", process.env.GEMINI_API_KEY ? `...${process.env.GEMINI_API_KEY.slice(-4)}` : "!!! ANAHTAR BULUNAMADI veya BOŞ !!!");
-  // console.log("---------------------------------");
+  const supabase = await createClient();
 
   try {
     const body = await request.json();
@@ -103,14 +100,26 @@ export async function POST(request: NextRequest) {
     const result = await model.generateContent(prompt);
     const response = result.response;
     const content = response.text();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      await supabase.from('dilekce').insert({
+        user_id: user.id,
+        type,
+        content,
+        form_data: formData
+      });
+    }
 
     return NextResponse.json({
       success: true,
       content: content
     });
 
+
   } catch (error) {
     console.error('API Error:', error);
+
     return NextResponse.json(
       { success: false, error: 'Dilekçe oluşturulurken bir hata oluştu' },
       { status: 500 }

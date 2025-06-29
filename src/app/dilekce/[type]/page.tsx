@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft, Download, FileText, Loader2, Copy, CheckCircle, AlertCircle, Sparkles, Info } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const formFields: any = {
   traffic: [
@@ -175,62 +176,245 @@ export default function DilekcePage() {
     }
   };
 
-  const downloadPDF = () => {
-    const pdf = new jsPDF();
-    const margin = 25;
-    const pageWidth = pdf.internal.pageSize.width;
-    const pageHeight = pdf.internal.pageSize.height;
-    const maxWidth = pageWidth - (margin * 2);
-    let y = margin;
+  const downloadPDF = async () => {
+    // Önce dilekçe içeriğini bir div'e render et
+    const element = document.createElement('div');
+    element.style.position = 'absolute';
+    element.style.left = '-9999px';
+    element.style.top = '-9999px';
+    element.style.width = '210mm';
+    element.style.minHeight = '297mm';
+    element.style.padding = '25mm 20mm';
+    element.style.backgroundColor = 'white';
+    element.style.fontFamily = 'Arial, sans-serif';
+    element.style.fontSize = '12pt';
+    element.style.lineHeight = '1.6';
+    element.style.color = '#000';
 
-    // Font ayarları
-    pdf.setFont('helvetica');
-
+    // İçeriği HTML olarak oluştur
     const lines = generatedContent.split('\n');
+    let htmlContent = '';
+    let skipNext = false;
 
-    lines.forEach(line => {
-      if (y > pageHeight - margin) {
-        pdf.addPage();
-        y = margin;
-      }
-
-      // Başlıklar ve önemli kısımlar için
-      if (line.includes('T.C.') || line.includes('KONU:') || line.includes('İTİRAZ GEREKÇELERİM:') ||
-        line.includes('SONUÇ VE TALEP:') || line.includes('EKLER:')) {
-        pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'bold');
-      } else {
-        pdf.setFontSize(11);
-        pdf.setFont('helvetica', 'normal');
-      }
-
-      // Boş satırlar
-      if (line.trim() === '') {
-        y += 7;
+    lines.forEach((line, index) => {
+      if (skipNext) {
+        skipNext = false;
         return;
       }
 
-      // Metni sar ve yazdır
-      const splitText = pdf.splitTextToSize(line, maxWidth);
-      splitText.forEach((textLine: string) => {
-        pdf.text(textLine, margin, y);
-        y += 6;
-      });
+      // Ana başlık
+      if (line.includes('REKTÖRLÜĞÜNE') || line.includes('MÜDÜRLÜĞÜNE') ||
+        line.includes('BAŞKANLIĞINA') || line.includes('HAKİMLİĞİNE')) {
+        htmlContent += `<h1 style="text-align: center; font-size: 14pt; font-weight: bold; margin: 0 0 10px 0;">${line.trim()}</h1>`;
+      }
+      // Alt başlık
+      else if (index === 1 && line.trim() && lines[0].includes('REKTÖRLÜĞÜNE')) {
+        htmlContent += `<h2 style="text-align: center; font-size: 13pt; font-weight: bold; margin: 0 0 30px 0;">${line.trim()}</h2>`;
+      }
+      // Sayın ile başlayan satırlar
+      else if (line.trim().startsWith('Sayın')) {
+        htmlContent += `<p style="margin: 20px 0 20px 0;">${line.trim()}</p>`;
+      }
+      // Tarih ve imza bloğu
+      else if (line.includes('Tarih:')) {
+        htmlContent += `<div style="text-align: right; margin-top: 50px;">`;
+        htmlContent += `<p style="margin: 5px 0;">${line.trim()}</p>`;
+
+        // Sonraki satırları da ekle
+        let nextIndex = index + 1;
+        while (nextIndex < lines.length && lines[nextIndex].trim()) {
+          htmlContent += `<p style="margin: 5px 0;">${lines[nextIndex].trim()}</p>`;
+          nextIndex++;
+          skipNext = true;
+        }
+        htmlContent += `</div>`;
+      }
+      // Konu başlıkları
+      else if (line.includes('KONU:') || line.includes('İTİRAZ GEREKÇELERİM:') ||
+        line.includes('SONUÇ VE TALEP:') || line.includes('EKLER:')) {
+        htmlContent += `<h3 style="font-weight: bold; margin: 20px 0 10px 0;">${line.trim()}</h3>`;
+      }
+      // Madde numaraları
+      else if (/^\d+\./.test(line.trim())) {
+        htmlContent += `<p style="margin: 5px 0 5px 20px;">${line.trim()}</p>`;
+      }
+      // Boş satır
+      else if (line.trim() === '') {
+        htmlContent += `<div style="height: 15px;"></div>`;
+      }
+      // Normal paragraf
+      else if (line.trim()) {
+        htmlContent += `<p style="text-align: justify; margin: 0 0 10px 0;">${line.trim()}</p>`;
+      }
     });
 
-    pdf.save(`${categoryNames[type].name.toLowerCase().replace(/ /g, '-')}-dilekce.pdf`);
-    toast.success('PDF başarıyla indirildi!');
+    element.innerHTML = htmlContent;
+    document.body.appendChild(element);
+
+    try {
+      // HTML'i canvas'a çevir
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      // Canvas'ı PDF'e dönüştür
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // İlk sayfaya ekle
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Eğer birden fazla sayfa gerekiyorsa
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // PDF'i kaydet
+      const fileName = `${categoryNames[type].name.toLowerCase().replace(/ /g, '-')}-dilekce-${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+
+      toast.success('PDF başarıyla indirildi!');
+    } catch (error) {
+      console.error('PDF oluşturma hatası:', error);
+      toast.error('PDF oluşturulurken bir hata oluştu');
+    } finally {
+      // Temp elementi kaldır
+      document.body.removeChild(element);
+    }
   };
 
   const downloadWord = () => {
-    const content = generatedContent;
-    const blob = new Blob([content], { type: 'application/msword' });
+    // Word formatı için HTML oluştur
+    const htmlContent = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head>
+      <meta charset="UTF-8">
+      <title>Dilekçe</title>
+      <style>
+        @page {
+          size: A4;
+          margin: 2.5cm;
+        }
+        body {
+          font-family: "Times New Roman", Times, serif;
+          font-size: 12pt;
+          line-height: 1.5;
+          color: #000;
+        }
+        .header {
+          text-align: center;
+          font-weight: bold;
+          font-size: 14pt;
+          margin-bottom: 10pt;
+        }
+        .sub-header {
+          text-align: center;
+          font-weight: bold;
+          font-size: 13pt;
+          margin-bottom: 20pt;
+        }
+        .date-signature {
+          text-align: right;
+          margin-top: 50pt;
+        }
+        .content {
+          text-align: justify;
+          margin-bottom: 10pt;
+        }
+        .subject {
+          font-weight: bold;
+          margin-top: 15pt;
+          margin-bottom: 10pt;
+        }
+        p {
+          margin: 0 0 10pt 0;
+        }
+      </style>
+    </head>
+    <body>
+  `;
+
+    // İçeriği işle
+    const lines = generatedContent.split('\n');
+    let processedHtml = '';
+    let skipNext = false;
+
+    lines.forEach((line, index) => {
+      if (skipNext) {
+        skipNext = false;
+        return;
+      }
+
+      // Ana başlık
+      if (line.includes('REKTÖRLÜĞÜNE') || line.includes('MÜDÜRLÜĞÜNE') ||
+        line.includes('BAŞKANLIĞINA') || line.includes('HAKİMLİĞİNE')) {
+        processedHtml += `<div class="header">${line.trim()}</div>`;
+      }
+      // Alt başlık
+      else if (index === 1 && line.trim() && lines[0].includes('REKTÖRLÜĞÜNE')) {
+        processedHtml += `<div class="sub-header">${line.trim()}</div>`;
+      }
+      // Tarih ve imza
+      else if (line.includes('Tarih:')) {
+        processedHtml += `<div class="date-signature">`;
+        processedHtml += `<p>${line.trim()}</p>`;
+
+        // Sonraki satırları da ekle
+        let nextIndex = index + 1;
+        while (nextIndex < lines.length && lines[nextIndex].trim()) {
+          processedHtml += `<p>${lines[nextIndex].trim()}</p>`;
+          nextIndex++;
+          skipNext = true;
+        }
+        processedHtml += `</div>`;
+      }
+      // Konu başlıkları
+      else if (line.includes('KONU:') || line.includes('İTİRAZ GEREKÇELERİM:') ||
+        line.includes('SONUÇ VE TALEP:') || line.includes('EKLER:')) {
+        processedHtml += `<div class="subject">${line.trim()}</div>`;
+      }
+      // Normal paragraf
+      else if (line.trim()) {
+        processedHtml += `<p class="content">${line.trim()}</p>`;
+      }
+    });
+
+    const fullHtml = htmlContent + processedHtml + '</body></html>';
+
+    // Blob oluştur ve indir
+    const blob = new Blob(['\ufeff', fullHtml], {
+      type: 'application/msword'
+    });
+
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${categoryNames[type].name.toLowerCase().replace(/ /g, '-')}-dilekce.doc`;
+
+    const fileName = `${categoryNames[type].name.toLowerCase().replace(/ /g, '-')}-dilekce-${new Date().toISOString().split('T')[0]}.doc`;
+    a.download = fileName;
+
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+
     toast.success('Word dosyası başarıyla indirildi!');
   };
 
@@ -239,6 +423,53 @@ export default function DilekcePage() {
     setCopied(true);
     toast.success('Metin kopyalandı!');
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const formatContentForDisplay = (content: string) => {
+    const lines = content.split('\n');
+    return lines.map((line, index) => {
+      // Ana başlık
+      if (line.includes('REKTÖRLÜĞÜNE') || line.includes('MÜDÜRLÜĞÜNE') ||
+        line.includes('BAŞKANLIĞINA') || line.includes('HAKİMLİĞİNE')) {
+        return <h1 key={index} className="text-center font-bold text-xl mb-3 uppercase">{line.trim()}</h1>;
+      }
+      // Alt başlık
+      else if (index === 1 && line.trim() && lines[0].includes('REKTÖRLÜĞÜNE')) {
+        return <h2 key={index} className="text-center font-bold text-lg mb-6">{line.trim()}</h2>;
+      }
+      // Sayın ile başlayan
+      else if (line.trim().startsWith('Sayın')) {
+        return <p key={index} className="mb-4">{line.trim()}</p>;
+      }
+      // Tarih ve imza bloğu
+      else if (line.includes('Tarih:')) {
+        return (
+          <div key={index} className="text-right mt-12 mb-4">
+            <p className="mb-2">{line.trim()}</p>
+            {lines.slice(index + 1).map((subLine, subIndex) => (
+              subLine.trim() && <p key={`${index}-${subIndex}`} className="mb-2">{subLine.trim()}</p>
+            ))}
+          </div>
+        );
+      }
+      // Konu başlıkları
+      else if (line.includes('KONU:') || line.includes('İTİRAZ GEREKÇELERİM:') ||
+        line.includes('SONUÇ VE TALEP:') || line.includes('EKLER:')) {
+        return <h3 key={index} className="font-bold mt-6 mb-3">{line.trim()}</h3>;
+      }
+      // Madde numaraları
+      else if (/^\d+\./.test(line.trim())) {
+        return <p key={index} className="ml-4 mb-2">{line.trim()}</p>;
+      }
+      // Boş satır
+      else if (line.trim() === '') {
+        return <div key={index} className="h-4" />;
+      }
+      // Normal paragraf
+      else {
+        return <p key={index} className="text-justify mb-3 leading-relaxed">{line.trim()}</p>;
+      }
+    }).filter(Boolean);
   };
 
   if (showResult) {
@@ -252,94 +483,83 @@ export default function DilekcePage() {
               <div className="flex justify-between items-center">
                 <div>
                   <h1 className="text-3xl font-bold mb-2">Dilekçeniz Hazır! 🎉</h1>
-                  <p className="text-blue-100">Hemen indirebilir veya kopyalayabilirsiniz</p>
+                  <p className="text-blue-100">
+                    {categoryNames[type].name} başarıyla oluşturuldu
+                  </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setShowResult(false);
-                    setFormData({});
-                  }}
-                  className="bg-white/20 hover:bg-white/30 p-3 rounded-xl transition"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
+                <div className="text-6xl">{categoryNames[type].icon}</div>
               </div>
             </div>
 
             {/* Content */}
             <div className="p-8">
-              <div className="bg-white rounded-xl p-8 shadow-inner border border-gray-200 mb-6">
-                <div className="font-sans space-y-4 text-gray-800" style={{ fontFamily: 'Arial, sans-serif', lineHeight: '1.6' }}>
-                  <pre className="whitespace-pre-wrap" style={{ fontFamily: 'inherit' }}>
-                    {generatedContent}
-                  </pre>
-                </div>
-              </div>
-
               {/* Action Buttons */}
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="flex flex-wrap gap-3 mb-8">
                 <button
                   onClick={downloadPDF}
-                  className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-semibold hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+                  className="flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all duration-200 font-semibold"
                 >
-                  <Download className="w-5 h-5 mr-2 group-hover:translate-y-0.5 transition-transform" />
+                  <Download className="w-5 h-5" />
                   PDF İndir
                 </button>
                 <button
                   onClick={downloadWord}
-                  className="group bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+                  className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 font-semibold"
                 >
-                  <FileText className="w-5 h-5 mr-2 group-hover:translate-y-0.5 transition-transform" />
+                  <FileText className="w-5 h-5" />
                   Word İndir
                 </button>
                 <button
                   onClick={copyToClipboard}
-                  className={`${copied
-                    ? 'bg-green-500 text-white'
-                    : 'border-2 border-gray-300 hover:border-blue-600'
-                    } py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center`}
+                  className="flex items-center gap-2 bg-gray-600 text-white px-6 py-3 rounded-xl hover:bg-gray-700 transition-all duration-200 font-semibold"
                 >
-                  {copied ? (
-                    <>
-                      <CheckCircle className="w-5 h-5 mr-2" />
-                      Kopyalandı!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-5 h-5 mr-2" />
-                      Metni Kopyala
-                    </>
-                  )}
+                  {copied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                  {copied ? 'Kopyalandı!' : 'Metni Kopyala'}
                 </button>
               </div>
 
+              {/* Formatted Content Display */}
+              <div className="bg-gray-50 rounded-2xl p-8 mb-8">
+                <div className="max-w-3xl mx-auto font-serif text-gray-800">
+                  {formatContentForDisplay(generatedContent)}
+                </div>
+              </div>
+
               {/* Info Box */}
-              <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
                 <div className="flex items-start">
-                  <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-semibold mb-1">Önemli Hatırlatmalar:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Dilekçenizi imzalamayı unutmayın</li>
-                      <li>Varsa ek belgeleri dilekçeye ekleyin</li>
-                      <li>Dilekçenin bir kopyasını saklayın</li>
-                      <li>İlgili kuruma elden veya posta yoluyla teslim edin</li>
+                  <Info className="w-6 h-6 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 mb-2">Önemli Notlar</h3>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• Dilekçenizi indirdikten sonra imzalamayı unutmayın</li>
+                      <li>• Gerekli ekleri dilekçenize iliştirin</li>
+                      <li>• Dilekçenizi ilgili kuruma elden veya posta yoluyla ulaştırın</li>
+                      <li>• Bir kopyasını kendinizde saklayın</li>
                     </ul>
                   </div>
                 </div>
               </div>
 
-              {/* New Dilekce Button */}
-              <button
-                onClick={() => {
-                  setShowResult(false);
-                  setFormData({});
-                }}
-                className="w-full mt-6 bg-gray-100 hover:bg-gray-200 py-3 rounded-xl font-semibold transition flex items-center justify-center"
-              >
-                <FileText className="w-5 h-5 mr-2" />
-                Yeni Dilekçe Oluştur
-              </button>
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => {
+                    setShowResult(false);
+                    setFormData({});
+                    setGeneratedContent('');
+                  }}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
+                >
+                  Yeni Dilekçe Oluştur
+                </button>
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                >
+                  Ana Sayfaya Dön
+                </button>
+              </div>
             </div>
           </div>
         </div>

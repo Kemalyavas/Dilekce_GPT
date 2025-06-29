@@ -1,27 +1,31 @@
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronRight, FileText, Clock, Shield, Star, Check, Menu, X, Zap, Users, Award, ArrowRight, Sparkles, Lock, TrendingUp, Heart, AlertCircle, Play, Pause, Volume2, VolumeX, CheckCircle2, Gift, Timer, ThumbsUp, Eye, Download, MessageSquare } from 'lucide-react';
+import { ChevronRight, FileText, Clock, Shield, Star, Check, Menu, X, Zap, Users, Award, ArrowRight, Sparkles, Lock, TrendingUp, Heart, AlertCircle, Play, Pause, Volume2, VolumeX, CheckCircle2, Gift, Timer, ThumbsUp, Eye, Download, MessageSquare, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 const DilekceGPT = () => {
+  const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [animatedNumber, setAnimatedNumber] = useState(4523);
+  const [animatedNumber, setAnimatedNumber] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [freeUsesLeft, setFreeUsesLeft] = useState(3);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [activeViewers, setActiveViewers] = useState(127);
   const [showExampleModal, setShowExampleModal] = useState(false);
 
-  // Gerçek zamanlı sayaçlar
+  // Scroll ve sayaç animasyonları
   useEffect(() => {
+    // Aktif kullanıcı sayısı
     const timer = setInterval(() => {
-      // Aktif kullanıcı sayısı
       setActiveViewers(prev => 85 + Math.floor(Math.random() * 30));
     }, 3000);
 
+    // Scroll durumu
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-
     window.addEventListener('scroll', handleScroll);
 
     // LocalStorage kontrolü
@@ -32,6 +36,26 @@ const DilekceGPT = () => {
     const testimonialTimer = setInterval(() => {
       setCurrentTestimonial(prev => (prev + 1) % testimonials.length);
     }, 5000);
+
+    // Sayı animasyonu
+    const animateNumber = () => {
+      const target = 4523;
+      const duration = 2000;
+      const increment = target / (duration / 16);
+      let current = 0;
+
+      const counter = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          setAnimatedNumber(target);
+          clearInterval(counter);
+        } else {
+          setAnimatedNumber(Math.floor(current));
+        }
+      }, 16);
+    };
+
+    animateNumber();
 
     return () => {
       clearInterval(timer);
@@ -142,57 +166,75 @@ const DilekceGPT = () => {
 
   const handleCategorySelect = (key: string) => {
     setSelectedCategory(key);
-    // Smooth scroll to form
     setTimeout(() => {
       document.getElementById('start-form')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
-  const exampleDilekce = `T.C.
-İSTANBUL VALİLİĞİ
-İl Emniyet Müdürlüğü
-Trafik Denetleme Şube Müdürlüğüne
-
-                                                          Tarih: 15.01.2025
-
-KONU: 34 ABC 123 Plakalı Araca Kesilen Trafik Cezasına İtiraz
-
-Sayın Müdürlük,
-
-15.01.2025 tarihinde saat 14:30'da, 34 ABC 123 plakalı aracıma Atatürk Caddesi'nde kesilen 2025/12345 numaralı ve 3.500 TL tutarındaki "kırmızı ışık ihlali" gerekçeli trafik cezasına itiraz etmek istiyorum.
-
-İTİRAZ GEREKÇELERİM:
-
-1. Belirtilen tarih ve saatte aracım işyerimin kapalı otoparkında park halindeydi.
-
-2. O gün ve saatte İstanbul dışında iş toplantısında bulunmaktaydım. (Uçak bileti ve otel rezervasyon belgeleri ektedir)
-
-3. Aracımın park halinde olduğunu gösteren otopark güvenlik kamera kayıtları mevcuttur.
-
-4. Ceza tutanağında belirtilen yer ve zamanda aracımın kullanılmadığını kanıtlayan tüm belgeler ekte sunulmuştur.
-
-SONUÇ VE TALEP:
-
-Yukarıda belirttiğim gerekçeler ve sunduğum kanıtlar doğrultusunda, hakkımda düzenlenen 3.500 TL tutarındaki idari para cezasının iptalini saygılarımla talep ederim.
-
-                                            Saygılarımla,
-                                            
-                                            Ahmet YILMAZ
-                                            T.C. No: 12345678901
-                                            Adres: Atatürk Mah. Cumhuriyet Cad. 
-                                                   No:123/5 Kadıköy/İSTANBUL
-                                            Tel: 0555 123 45 67
-                                            E-posta: ahmet.yilmaz@email.com
-
-EKLER:
-1. Trafik cezası tutanağı fotokopisi
-2. Uçak bileti
-3. Otel rezervasyon belgesi
-4. Otopark güvenlik kamera kayıt tutanağı
-5. Araç ruhsatı fotokopisi`;
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <div className="min-h-screen bg-white">
+      {/* CSS Styles */}
+      <style jsx>{`
+        html {
+          scroll-behavior: smooth;
+        }
+        
+        /* Logo animasyonu */
+        @keyframes gradient-shift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        .logo-gradient {
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+          background-size: 200% 200%;
+          animation: gradient-shift 3s ease infinite;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        
+        /* Smooth hover transitions */
+        .hover-lift {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hover-lift:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Testimonial scroll animation */
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        
+        .animate-scroll {
+          animation: scroll 30s linear infinite;
+        }
+        
+        /* Fade in animation */
+        @keyframes fadeIn {
+          from { 
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .fade-in {
+          animation: fadeIn 0.6s ease-out;
+        }
+      `}</style>
+
       {/* Aciliyet Banner */}
       <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 text-center text-sm font-medium">
         <div className="flex items-center justify-center space-x-4">
@@ -209,26 +251,70 @@ EKLER:
       <nav className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-lg py-3' : 'bg-white/95 backdrop-blur py-4'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="text-2xl font-bold text-gray-900">
-                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">DilekçeGPT</span>
-              </div>
-            </div>
+            {/* Logo */}
+            <Link href="/" className="flex items-center">
+              <h1 className="text-2xl font-bold logo-gradient">
+                DilekçeGPT
+              </h1>
+            </Link>
 
+            {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-6">
               <button
                 onClick={() => setShowExampleModal(true)}
-                className="text-gray-700 hover:text-blue-600 font-medium flex items-center"
+                className="text-gray-700 hover:text-blue-600 font-medium flex items-center transition-colors"
               >
                 <FileText className="w-4 h-4 mr-1" />
                 Örnek Dilekçe
               </button>
-              <a href="#testimonials" className="text-gray-700 hover:text-blue-600 font-medium">Kullanıcı Yorumları</a>
-              <a href="#how" className="text-gray-700 hover:text-blue-600 font-medium">Nasıl Çalışır?</a>
-              <a href="#pricing" className="text-gray-700 hover:text-blue-600 font-medium">Fiyatlar</a>
+              <a href="#testimonials" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                Kullanıcı Yorumları
+              </a>
+              <a href="#how" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                Nasıl Çalışır?
+              </a>
+              <a href="#pricing" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                Fiyatlar
+              </a>
+
+              {/* Kullanıcı durumuna göre butonlar */}
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="text-gray-700 hover:text-blue-600 font-medium flex items-center transition-colors"
+                  >
+                    <User className="w-4 h-4 mr-1" />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-gray-700 hover:text-red-600 font-medium flex items-center transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 mr-1" />
+                    Çıkış
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                  >
+                    Giriş Yap
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Kayıt Ol
+                  </Link>
+                </>
+              )}
+
               <button
                 onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-full hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold flex items-center"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition-all duration-300 font-semibold flex items-center"
               >
                 <Zap className="w-4 h-4 mr-2" />
                 Hemen Başla
@@ -240,6 +326,7 @@ EKLER:
               </button>
             </div>
 
+            {/* Mobile Menu Button */}
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden">
               {isMenuOpen ? <X /> : <Menu />}
             </button>
@@ -247,21 +334,21 @@ EKLER:
         </div>
       </nav>
 
-      {/* Hero Section - Daha İkna Edici */}
+      {/* Hero Section */}
       <section className="relative py-16 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center">
+          <div className="text-center fade-in">
             {/* Trust Badges */}
             <div className="flex flex-wrap justify-center gap-4 mb-8">
-              <div className="flex items-center bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm">
+              <div className="flex items-center bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm hover-lift">
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                <span className="font-semibold">4.523 Oluşturulan Dilekçe</span>
+                <span className="font-semibold">{animatedNumber.toLocaleString('tr-TR')} Oluşturulan Dilekçe</span>
               </div>
-              <div className="flex items-center bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm">
+              <div className="flex items-center bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm hover-lift">
                 <Shield className="w-4 h-4 mr-2" />
                 <span className="font-semibold">%100 Güvenli & KVKK Uyumlu</span>
               </div>
-              <div className="flex items-center bg-purple-50 text-purple-700 px-4 py-2 rounded-full text-sm">
+              <div className="flex items-center bg-purple-50 text-purple-700 px-4 py-2 rounded-full text-sm hover-lift">
                 <Users className="w-4 h-4 mr-2" />
                 <span className="font-semibold">Binlerce Mutlu Kullanıcı</span>
               </div>
@@ -291,7 +378,7 @@ EKLER:
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <button
                 onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
-                className="group bg-gradient-to-r from-green-600 to-emerald-600 text-white px-10 py-5 rounded-full text-lg font-bold hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+                className="group bg-gradient-to-r from-green-600 to-emerald-600 text-white px-10 py-5 rounded-full text-lg font-bold hover:shadow-lg transition-all duration-300 flex items-center justify-center"
               >
                 <Gift className="w-6 h-6 mr-2" />
                 3 Ücretsiz Dilekçe Hakkı
@@ -299,13 +386,13 @@ EKLER:
               </button>
               <button
                 onClick={() => setShowExampleModal(true)}
-                className="bg-white border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-full text-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition-all duration-300"
+                className="bg-white border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-full text-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition-colors duration-300"
               >
                 Örnek Dilekçe Gör
               </button>
             </div>
 
-            {/* Social Proof Ticker */}
+            {/* Social Proof */}
             <div className="bg-gray-100 rounded-2xl p-4 max-w-2xl mx-auto">
               <div className="flex items-center justify-center space-x-4 text-sm">
                 <div className="flex -space-x-2">
@@ -326,6 +413,24 @@ EKLER:
         </div>
       </section>
 
+      {/* Kullanıcı giriş yapmamışsa göster */}
+      {!user && (
+        <div className="bg-blue-50 py-4">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+            <p className="text-blue-800">
+              <Link href="/auth/login" className="font-semibold underline hover:text-blue-900 transition-colors">
+                Giriş yapın
+              </Link>
+              {' '}veya{' '}
+              <Link href="/auth/register" className="font-semibold underline hover:text-blue-900 transition-colors">
+                kayıt olun
+              </Link>
+              {' '}ve tüm dilekçelerinizi kaydedin!
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Success Stories Ticker */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-4 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
@@ -342,7 +447,7 @@ EKLER:
         </div>
       </section>
 
-      {/* Categories - Daha Cazip */}
+      {/* Categories */}
       <section id="categories" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -357,14 +462,13 @@ EKLER:
               <button
                 key={key}
                 onClick={() => handleCategorySelect(key)}
-                className={`group relative p-6 rounded-2xl transition-all duration-300 transform hover:scale-105 ${selectedCategory === key
-                  ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-2xl'
-                  : 'bg-white border-2 border-gray-200 hover:border-blue-600 hover:shadow-xl'
+                className={`group relative p-6 rounded-2xl transition-all duration-300 hover-lift ${selectedCategory === key
+                    ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-2xl'
+                    : 'bg-white border-2 border-gray-200 hover:border-blue-600 hover:shadow-lg'
                   }`}
               >
-                {/* Popüler Badge */}
                 {key === 'traffic' && (
-                  <div className="absolute -top-3 -right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+                  <div className="absolute -top-3 -right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
                     En Popüler
                   </div>
                 )}
@@ -377,7 +481,6 @@ EKLER:
                   {category.desc}
                 </p>
 
-                {/* Stats */}
                 <div className={`text-sm ${selectedCategory === key ? 'text-white/80' : 'text-gray-500'}`}>
                   <p className="flex items-center justify-center">
                     <TrendingUp className="w-4 h-4 mr-1" />
@@ -386,7 +489,7 @@ EKLER:
                 </div>
 
                 {selectedCategory === key && (
-                  <ArrowRight className="absolute bottom-4 right-4 w-6 h-6 animate-bounce-x" />
+                  <ArrowRight className="absolute bottom-4 right-4 w-6 h-6" />
                 )}
               </button>
             ))}
@@ -394,12 +497,11 @@ EKLER:
 
           {/* Selected Category Action */}
           {selectedCategory && (
-            <div id="start-form" className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl p-8 shadow-xl">
+            <div id="start-form" className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl p-8 shadow-xl fade-in">
               <div className="max-w-2xl mx-auto text-center">
                 <div className="text-6xl mb-4">{categories[selectedCategory].icon}</div>
                 <h3 className="text-3xl font-bold mb-4">{categories[selectedCategory].name}</h3>
 
-                {/* Güven Unsurları */}
                 <div className="flex flex-wrap justify-center gap-4 mb-6">
                   <div className="flex items-center text-sm text-gray-700">
                     <Lock className="w-4 h-4 mr-1 text-green-600" />
@@ -417,7 +519,7 @@ EKLER:
 
                 <button
                   onClick={() => window.location.href = `/dilekce/${selectedCategory}`}
-                  className="group bg-gradient-to-r from-green-600 to-emerald-600 text-white px-12 py-5 rounded-full text-xl font-bold hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center mx-auto"
+                  className="group bg-gradient-to-r from-green-600 to-emerald-600 text-white px-12 py-5 rounded-full text-xl font-bold hover:shadow-lg transition-all duration-300 flex items-center justify-center mx-auto"
                 >
                   <Zap className="w-6 h-6 mr-2" />
                   Hemen Başla
@@ -469,7 +571,7 @@ EKLER:
               }
             ].map((item, i) => (
               <div key={i} className="relative group">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300">
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover-lift">
                   <div className="flex items-center justify-between mb-4">
                     <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold">
                       {item.step}
@@ -494,7 +596,6 @@ EKLER:
             ))}
           </div>
 
-          {/* Toplam Süre */}
           <div className="text-center mt-12">
             <div className="inline-flex items-center bg-green-100 text-green-800 px-6 py-3 rounded-full">
               <Timer className="w-5 h-5 mr-2" />
@@ -504,7 +605,7 @@ EKLER:
         </div>
       </section>
 
-      {/* User Reviews - Gerçekçi */}
+      {/* User Reviews */}
       <section id="testimonials" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -516,8 +617,7 @@ EKLER:
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {testimonials.map((testimonial, i) => (
-              <div key={i} className="bg-gray-50 rounded-2xl p-6 relative hover:shadow-lg transition-all duration-300">
-                {/* Stars */}
+              <div key={i} className="bg-gray-50 rounded-2xl p-6 relative hover:shadow-lg transition-all duration-300 hover-lift">
                 <div className="flex mb-3">
                   {[...Array(5)].map((_, idx) => (
                     <Star
@@ -527,10 +627,8 @@ EKLER:
                   ))}
                 </div>
 
-                {/* Content */}
                 <p className="text-gray-700 mb-4">"{testimonial.content}"</p>
 
-                {/* User Info */}
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold text-sm">{testimonial.name}</p>
@@ -550,7 +648,7 @@ EKLER:
                 <div className="text-blue-100">Toplam Tasarruf</div>
               </div>
               <div>
-                <div className="text-5xl font-bold mb-2">4.523</div>
+                <div className="text-5xl font-bold mb-2">{animatedNumber.toLocaleString('tr-TR')}</div>
                 <div className="text-blue-100">Mutlu Kullanıcı</div>
               </div>
               <div>
@@ -596,7 +694,7 @@ EKLER:
                 desc: "3 dakikada hazır"
               }
             ].map((item, i) => (
-              <div key={i} className="bg-white p-6 rounded-xl shadow-lg text-center hover:shadow-xl transition">
+              <div key={i} className="bg-white p-6 rounded-xl shadow-lg text-center hover:shadow-xl transition-shadow hover-lift">
                 <div className="text-blue-600 mb-4 flex justify-center">{item.icon}</div>
                 <h3 className="font-bold mb-2">{item.title}</h3>
                 <p className="text-sm text-gray-600">{item.desc}</p>
@@ -606,7 +704,7 @@ EKLER:
         </div>
       </section>
 
-      {/* Pricing - Daha Gerçekçi */}
+      {/* Pricing */}
       <section id="pricing" className="py-20 bg-white overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -615,7 +713,6 @@ EKLER:
             </h2>
             <p className="text-xl text-gray-600">Kredi kartı gerekmez, hemen deneyin</p>
 
-            {/* Bu ay için */}
             <div className="mt-4 inline-flex items-center bg-orange-100 text-orange-700 px-4 py-2 rounded-full">
               <AlertCircle className="w-4 h-4 mr-2" />
               <span className="font-semibold">Bu fiyatlar sadece bu ay geçerli!</span>
@@ -624,7 +721,7 @@ EKLER:
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Ücretsiz */}
-            <div className="relative bg-gray-50 p-8 rounded-3xl hover:shadow-xl transition-all duration-300">
+            <div className="relative bg-gray-50 p-8 rounded-3xl hover:shadow-xl transition-all duration-300 hover-lift">
               <h3 className="text-2xl font-bold mb-6">Ücretsiz Deneme</h3>
               <div className="text-5xl font-bold mb-6">₺0</div>
               <ul className="space-y-3 mb-8">
@@ -643,7 +740,7 @@ EKLER:
               </ul>
               <button
                 onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
-                className="w-full py-4 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition"
+                className="w-full py-4 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
               >
                 Hemen Dene
               </button>
@@ -652,7 +749,7 @@ EKLER:
             {/* Popüler */}
             <div className="relative bg-gradient-to-b from-blue-600 to-purple-600 p-8 rounded-3xl shadow-2xl transform scale-105">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <div className="bg-orange-500 text-white px-6 py-2 rounded-full text-sm font-bold animate-pulse">
+                <div className="bg-orange-500 text-white px-6 py-2 rounded-full text-sm font-bold">
                   ÇOK SATAN
                 </div>
               </div>
@@ -684,14 +781,14 @@ EKLER:
                     <span>Dilekçe Arşivi</span>
                   </li>
                 </ul>
-                <button className="w-full py-4 bg-white text-blue-600 rounded-xl font-bold hover:shadow-lg transition">
+                <button className="w-full py-4 bg-white text-blue-600 rounded-xl font-bold hover:shadow-lg transition-shadow">
                   Hemen Başla
                 </button>
               </div>
             </div>
 
             {/* Yıllık */}
-            <div className="relative bg-gray-50 p-8 rounded-3xl hover:shadow-xl transition-all duration-300">
+            <div className="relative bg-gray-50 p-8 rounded-3xl hover:shadow-xl transition-all duration-300 hover-lift">
               <div className="absolute -top-4 right-4">
                 <div className="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold">
                   2 AY BEDAVA
@@ -716,13 +813,12 @@ EKLER:
                   <span>API Erişimi</span>
                 </li>
               </ul>
-              <button className="w-full py-4 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-900 transition">
+              <button className="w-full py-4 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-900 transition-colors">
                 Başla
               </button>
             </div>
           </div>
 
-          {/* Garanti */}
           <div className="text-center mt-12">
             <div className="inline-flex items-center bg-green-100 text-green-800 px-6 py-3 rounded-full">
               <Shield className="w-5 h-5 mr-2" />
@@ -759,7 +855,6 @@ EKLER:
             <div className="text-2xl font-bold mb-4">DilekçeGPT</div>
             <p className="text-gray-400 mb-6">Türkiye'nin en güvenilir dilekçe asistanı</p>
 
-            {/* Trust Badges */}
             <div className="flex flex-wrap justify-center gap-6 mb-8">
               <div className="flex items-center text-sm">
                 <Shield className="w-4 h-4 mr-2 text-green-500" />
@@ -784,13 +879,13 @@ EKLER:
 
       {/* Example Modal */}
       {showExampleModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur z-50 flex items-center justify-center p-4 fade-in">
           <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
             <div className="p-6 border-b flex justify-between items-center">
               <h3 className="text-2xl font-bold">Örnek Dilekçe</h3>
               <button
                 onClick={() => setShowExampleModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -798,7 +893,6 @@ EKLER:
             <div className="p-6 overflow-y-auto max-h-[70vh]">
               <div className="bg-white rounded-xl p-8 shadow-inner">
                 <div className="font-sans space-y-6 text-gray-800">
-                  {/* Başlık */}
                   <div className="text-center space-y-2">
                     <p className="font-bold">T.C.</p>
                     <p className="font-bold">İSTANBUL VALİLİĞİ</p>
@@ -806,17 +900,14 @@ EKLER:
                     <p className="font-bold">Trafik Denetleme Şube Müdürlüğüne</p>
                   </div>
 
-                  {/* Tarih */}
                   <div className="text-right">
                     <p className="text-sm">Tarih: 15.01.2025</p>
                   </div>
 
-                  {/* Konu */}
                   <div>
                     <p className="font-bold">KONU: 34 ABC 123 Plakalı Araca Kesilen Trafik Cezasına İtiraz</p>
                   </div>
 
-                  {/* İçerik */}
                   <div className="space-y-4">
                     <p>Sayın Müdürlük,</p>
 
@@ -844,7 +935,6 @@ EKLER:
                       </p>
                     </div>
 
-                    {/* İmza Bloğu */}
                     <div className="mt-8 text-right space-y-1">
                       <p>Saygılarımla,</p>
                       <div className="mt-8">
@@ -857,7 +947,6 @@ EKLER:
                       </div>
                     </div>
 
-                    {/* Ekler */}
                     <div className="mt-6 border-t pt-4">
                       <p className="font-bold">EKLER:</p>
                       <ol className="list-decimal list-inside text-sm ml-4 mt-2 space-y-1">
@@ -881,225 +970,6 @@ EKLER:
           </div>
         </div>
       )}
-
-      {/* CSS for animations */}
-      <style jsx>{`
-        @keyframes bounce-x {
-          0%, 100% { transform: translateX(0); }
-          50% { transform: translateX(10px); }
-        }
-        
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes pulse-glow {
-          0%, 100% { 
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-          }
-          50% { 
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
-          }
-        }
-        
-        @keyframes gradient-shift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        
-        .animate-bounce-x {
-          animation: bounce-x 2s ease-in-out infinite;
-        }
-        
-        .animate-scroll {
-          animation: scroll 30s linear infinite;
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out;
-        }
-        
-        .animate-pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        
-        .animate-gradient-shift {
-          background-size: 200% 200%;
-          animation: gradient-shift 3s ease infinite;
-        }
-        
-        /* Hover efektleri için */
-        .hover-lift {
-          transition: all 0.3s ease;
-        }
-        
-        .hover-lift:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Smooth scroll */
-        html {
-          scroll-behavior: smooth;
-        }
-        
-        /* Loading skeleton */
-        @keyframes skeleton-loading {
-          0% { background-position: -200px 0; }
-          100% { background-position: calc(200px + 100%) 0; }
-        }
-        
-        .skeleton {
-          background: linear-gradient(
-            90deg,
-            #f0f0f0 0px,
-            #f8f8f8 40px,
-            #f0f0f0 80px
-          );
-          background-size: 200px 100%;
-          animation: skeleton-loading 1.5s infinite;
-        }
-        
-        /* Glow effect for buttons */
-        .glow-effect {
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .glow-effect::before {
-          content: '';
-          position: absolute;
-          top: -2px;
-          left: -2px;
-          right: -2px;
-          bottom: -2px;
-          background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
-          background-size: 300% 300%;
-          z-index: -1;
-          animation: gradient-shift 3s ease infinite;
-          border-radius: inherit;
-          opacity: 0;
-          transition: opacity 0.3s;
-        }
-        
-        .glow-effect:hover::before {
-          opacity: 1;
-        }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-          width: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-          background: #f1f1f1;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
-          border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #2563eb, #7c3aed);
-        }
-        
-        /* Mobile tap highlight remove */
-        * {
-          -webkit-tap-highlight-color: transparent;
-        }
-        
-        /* Notification badge animation */
-        @keyframes badge-pop {
-          0% { transform: scale(0); }
-          50% { transform: scale(1.2); }
-          100% { transform: scale(1); }
-        }
-        
-        .badge-pop {
-          animation: badge-pop 0.5s ease-out;
-        }
-        
-        /* Text gradient animation */
-        @keyframes text-gradient {
-          0%, 100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-        
-        .animate-text-gradient {
-          background: linear-gradient(
-            to right,
-            #3b82f6,
-            #8b5cf6,
-            #ec4899,
-            #3b82f6
-          );
-          background-size: 200% auto;
-          color: transparent;
-          -webkit-background-clip: text;
-          background-clip: text;
-          animation: text-gradient 3s linear infinite;
-        }
-        
-        /* Success checkmark animation */
-        @keyframes checkmark {
-          0% {
-            stroke-dashoffset: 50;
-          }
-          100% {
-            stroke-dashoffset: 0;
-          }
-        }
-        
-        .checkmark-animation {
-          stroke-dasharray: 50;
-          stroke-dashoffset: 50;
-          animation: checkmark 0.5s ease-out forwards;
-        }
-        
-        /* Floating animation */
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        
-        /* Responsive typography */
-        @media (max-width: 640px) {
-          .text-5xl { font-size: 2.5rem; }
-          .text-4xl { font-size: 2rem; }
-          .text-3xl { font-size: 1.75rem; }
-        }
-      `}</style>
     </div>
   );
 };
