@@ -463,8 +463,8 @@ const DilekceGPT = () => {
                 key={key}
                 onClick={() => handleCategorySelect(key)}
                 className={`group relative p-6 rounded-2xl transition-all duration-300 hover-lift ${selectedCategory === key
-                    ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-2xl'
-                    : 'bg-white border-2 border-gray-200 hover:border-blue-600 hover:shadow-lg'
+                  ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-2xl'
+                  : 'bg-white border-2 border-gray-200 hover:border-blue-600 hover:shadow-lg'
                   }`}
               >
                 {key === 'traffic' && (
@@ -890,81 +890,59 @@ const DilekceGPT = () => {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto max-h-[70vh]">
-              <div className="bg-white rounded-xl p-8 shadow-inner">
-                <div className="font-sans space-y-6 text-gray-800">
-                  <div className="text-center space-y-2">
-                    <p className="font-bold">T.C.</p>
-                    <p className="font-bold">İSTANBUL VALİLİĞİ</p>
-                    <p className="font-bold">İl Emniyet Müdürlüğü</p>
-                    <p className="font-bold">Trafik Denetleme Şube Müdürlüğüne</p>
-                  </div>
+            <div className="bg-white rounded-xl p-8 shadow-inner font-serif text-sm text-gray-800 space-y-4">
+              <p className="text-center font-bold text-base">İSTANBUL NÖBETÇİ SULH CEZA HAKİMLİĞİ'NE</p>
 
-                  <div className="text-right">
-                    <p className="text-sm">Tarih: 15.01.2025</p>
-                  </div>
-
-                  <div>
-                    <p className="font-bold">KONU: 34 ABC 123 Plakalı Araca Kesilen Trafik Cezasına İtiraz</p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <p>Sayın Müdürlük,</p>
-
-                    <p className="text-justify">
-                      15.01.2025 tarihinde saat 14:30'da, 34 ABC 123 plakalı aracıma Atatürk Caddesi'nde kesilen
-                      2025/12345 numaralı ve 3.500 TL tutarındaki "kırmızı ışık ihlali" gerekçeli trafik cezasına
-                      itiraz etmek istiyorum.
-                    </p>
-
-                    <div>
-                      <p className="font-bold mb-2">İTİRAZ GEREKÇELERİM:</p>
-                      <ol className="list-decimal list-inside space-y-2 ml-4">
-                        <li>Belirtilen tarih ve saatte aracım işyerimin kapalı otoparkında park halindeydi.</li>
-                        <li>O gün ve saatte İstanbul dışında iş toplantısında bulunmaktaydım. (Uçak bileti ve otel rezervasyon belgeleri ektedir)</li>
-                        <li>Aracımın park halinde olduğunu gösteren otopark güvenlik kamera kayıtları mevcuttur.</li>
-                        <li>Ceza tutanağında belirtilen yer ve zamanda aracımın kullanılmadığını kanıtlayan tüm belgeler ekte sunulmuştur.</li>
-                      </ol>
-                    </div>
-
-                    <div>
-                      <p className="font-bold mb-2">SONUÇ VE TALEP:</p>
-                      <p className="text-justify">
-                        Yukarıda belirttiğim gerekçeler ve sunduğum kanıtlar doğrultusunda, hakkımda düzenlenen
-                        3.500 TL tutarındaki idari para cezasının iptalini saygılarımla talep ederim.
-                      </p>
-                    </div>
-
-                    <div className="mt-8 text-right space-y-1">
-                      <p>Saygılarımla,</p>
-                      <div className="mt-8">
-                        <p className="font-semibold">Ahmet YILMAZ</p>
-                        <p className="text-sm">T.C. No: 12345678901</p>
-                        <p className="text-sm">Adres: Atatürk Mah. Cumhuriyet Cad.</p>
-                        <p className="text-sm ml-12">No:123/5 Kadıköy/İSTANBUL</p>
-                        <p className="text-sm">Tel: 0555 123 45 67</p>
-                        <p className="text-sm">E-posta: ahmet.yilmaz@email.com</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 border-t pt-4">
-                      <p className="font-bold">EKLER:</p>
-                      <ol className="list-decimal list-inside text-sm ml-4 mt-2 space-y-1">
-                        <li>Trafik cezası tutanağı fotokopisi</li>
-                        <li>Uçak bileti</li>
-                        <li>Otel rezervasyon belgesi</li>
-                        <li>Otopark güvenlik kamera kayıt tutanağı</li>
-                        <li>Araç ruhsatı fotokopisi</li>
-                      </ol>
-                    </div>
-                  </div>
-                </div>
+              <div className="pt-4">
+                <p><span className="font-bold">İTİRAZ EDEN:</span> Ahmet YILMAZ</p>
+                <p><span className="font-bold">T.C. KİMLİK NO:</span> 12345678901</p>
+                <p><span className="font-bold">ADRES:</span> Atatürk Mah. Cumhuriyet Cad. No:123/5 Kadıköy/İSTANBUL</p>
+                <p><span className="font-bold">VEKİLİ:</span> Av. [Avukat Adı Soyadı]</p>
               </div>
 
-              <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-4">
-                <p className="text-green-800 font-semibold">
-                  ✅ Bu dilekçe formatı tüm resmi kurumlarca kabul edilir
+              <div>
+                <p><span className="font-bold">İTİRAZA KONU:</span> İstanbul Trafik Denetleme Şube Müdürlüğü'nün 15.01.2025 tarihli, MA-123456 seri numaralı trafik idari para cezası karar tutanağı.</p>
+              </div>
+
+              <div>
+                <p><span className="font-bold">KONU:</span> Hukuka aykırı olarak düzenlenen idari para cezasının iptali talebinden ibarettir.</p>
+              </div>
+
+              <div>
+                <p className="font-bold">AÇIKLAMALAR:</p>
+                <ol className="list-decimal list-inside space-y-2 pl-4">
+                  <li>Müvekkile ait 34 ABC 123 plakalı araca, 15.01.2025 tarihinde "kırmızı ışık ihlali" yapıldığı gerekçesiyle idari para cezası uygulanmıştır. İşbu ceza, usul ve yasaya aykırıdır.</li>
+                  <li>Ceza tutanağında belirtilen tarih ve saatte, müvekkilin aracı olay yerinde bulunmamakta, işyerine ait kapalı otoparkta park halinde durmaktaydı. Bu durum, otoparka ait güvenlik kamerası kayıtları ile sabittir.</li>
+                  <li>Müvekkil, söz konusu saat diliminde şehir dışında bir iş toplantısında olup, bu husus uçak biletleri ve otel konaklama belgeleri (EK-1, EK-2) ile kanıtlanabilmektedir.</li>
+                </ol>
+              </div>
+
+              <div>
+                <p className="font-bold">HUKUKİ NEDENLER:</p>
+                <p>5326 Sayılı Kabahatler Kanunu, 2918 Sayılı Karayolları Trafik Kanunu ve ilgili mevzuat.</p>
+              </div>
+
+              <div>
+                <p className="font-bold">SONUÇ VE İSTEM:</p>
+                <p className="text-justify">
+                  Yukarıda açıklanan ve re'sen dikkate alınacak nedenlerle, fiili ve hukuki dayanaktan yoksun olan idari para cezası karar tutanağının İPTALİNE karar verilmesini saygılarımla arz ve talep ederim.
                 </p>
+              </div>
+
+              <div className="pt-6 text-right space-y-1">
+                <p>16.01.2025</p>
+                <p className="font-bold">İtiraz Eden Vekili</p>
+                <p className="font-bold">Av. Ahmet YILMAZ</p>
+                <p>(e-imzalıdır)</p>
+              </div>
+
+              <div className="mt-4 border-t pt-4">
+                <p className="font-bold">EKLER:</p>
+                <ol className="list-decimal list-inside text-sm pl-4 mt-2">
+                  <li>Onanmış Vekaletname Sureti</li>
+                  <li>Uçak Bileti ve Otel Rezervasyon Belgesi</li>
+                  <li>Otopark Güvenlik Kamera Kaydı Talep Dilekçesi</li>
+                </ol>
               </div>
             </div>
           </div>
