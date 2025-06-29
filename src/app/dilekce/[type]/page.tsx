@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft, Download, FileText, Loader2, Copy, CheckCircle, AlertCircle, Sparkles, Info } from 'lucide-react';
+import { ChevronLeft, Download, FileText, Loader2, Copy, CheckCircle, AlertCircle, Sparkles, Info, Crown } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useAuth } from '@/contexts/AuthContext'; // AuthContext'i import ediyoruz
 
 const formFields: any = {
   traffic: [
@@ -88,6 +89,7 @@ const formFields: any = {
 export default function DilekcePage() {
   const params = useParams();
   const router = useRouter();
+  const { isAdmin } = useAuth(); // YÖNETİCİ BİLGİSİNİ ALIYORUZ
   const type = params.type as string;
 
   const [formData, setFormData] = useState<any>({});
@@ -108,16 +110,20 @@ export default function DilekcePage() {
   };
 
   useEffect(() => {
-    const savedUses = localStorage.getItem('freeUsesLeft');
-    if (savedUses) {
-      setFreeUsesLeft(parseInt(savedUses));
+    // YÖNETİCİ DEĞİLSE localStorage'ı kontrol et
+    if (!isAdmin) {
+      const savedUses = localStorage.getItem('freeUsesLeft');
+      if (savedUses) {
+        setFreeUsesLeft(parseInt(savedUses));
+      }
     }
-  }, []);
+  }, [isAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (freeUsesLeft <= 0) {
+    // YÖNETİCİ DEĞİLSE ve kullanım hakkı bittiyse hata ver
+    if (!isAdmin && freeUsesLeft <= 0) {
       toast.error('Ücretsiz kullanım hakkınız bitti!');
       setTimeout(() => {
         router.push('/#pricing');
@@ -140,10 +146,12 @@ export default function DilekcePage() {
         setGeneratedContent(data.content);
         setShowResult(true);
 
-        // Ücretsiz kullanım hakkını azalt
-        const newUsesLeft = freeUsesLeft - 1;
-        setFreeUsesLeft(newUsesLeft);
-        localStorage.setItem('freeUsesLeft', newUsesLeft.toString());
+        // YÖNETİCİ DEĞİLSE ücretsiz kullanım hakkını azalt
+        if (!isAdmin) {
+          const newUsesLeft = freeUsesLeft - 1;
+          setFreeUsesLeft(newUsesLeft);
+          localStorage.setItem('freeUsesLeft', newUsesLeft.toString());
+        }
 
         toast.success('Dilekçeniz başarıyla oluşturuldu!');
       } else {
@@ -156,6 +164,7 @@ export default function DilekcePage() {
     }
   };
 
+  // ... (downloadPDF, downloadWord, copyToClipboard, formatContentForDisplay fonksiyonları aynı kalacak) ...
   const downloadPDF = async () => {
     // Önce dilekçe içeriğini bir div'e render et
     const element = document.createElement('div');
@@ -568,8 +577,13 @@ export default function DilekcePage() {
               </div>
             </div>
 
-            {/* Free Uses Alert */}
-            {freeUsesLeft > 0 ? (
+            {/* YÖNETİCİ/KULLANICI DURUM BİLGİSİ */}
+            {isAdmin ? (
+              <div className="bg-yellow-400/20 rounded-xl p-3 flex items-center text-yellow-200">
+                <Crown className="w-5 h-5 mr-2" />
+                <span className="font-semibold">Yönetici Modu: Sınırsız Kullanım</span>
+              </div>
+            ) : freeUsesLeft > 0 ? (
               <div className="bg-white/20 rounded-xl p-3 flex items-center">
                 <Sparkles className="w-5 h-5 mr-2" />
                 <span className="font-semibold">{freeUsesLeft} ücretsiz hakkınız kaldı</span>
@@ -639,8 +653,8 @@ export default function DilekcePage() {
 
             <button
               type="submit"
-              disabled={loading || freeUsesLeft <= 0}
-              className={`w-full ${freeUsesLeft <= 0
+              disabled={loading || (!isAdmin && freeUsesLeft <= 0)} // YÖNETİCİ DEĞİLSE LİMİT KONTROLÜ
+              className={`w-full ${!isAdmin && freeUsesLeft <= 0
                 ? 'bg-gray-300 cursor-not-allowed'
                 : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-xl transform hover:scale-[1.02]'
                 } text-white py-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center`}
@@ -650,7 +664,7 @@ export default function DilekcePage() {
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Dilekçe Oluşturuluyor...
                 </>
-              ) : freeUsesLeft <= 0 ? (
+              ) : !isAdmin && freeUsesLeft <= 0 ? (
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
                   Ücretsiz Hakkınız Bitti
